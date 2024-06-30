@@ -1,117 +1,123 @@
 const express = require('express');
-const axios = require('axios');
-const crypto = require('crypto');
-const bodyParser = require('body-parser');
-const { Pool } = require('pg');
 const cors = require('cors');
-const path = require('path');
-require('dotenv').config();
+const crypto = require('crypto');
+const axios = require('axios');
+const uniqid = require('uniqid');
 
 const app = express();
-app.use(bodyParser.json());
+
 app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({
+    extended: true
+}));
 
-const pool = new Pool({
-    user: process.env.PGUSER,
-    password: process.env.PGPASSWORD,
-    database: process.env.PGDATABASE,
-    port: 5432,
-    host: process.env.PGHOST,
-    ssl: { rejectUnauthorized: false },
-});
 
-const merchantId = 'M1N7YIUDDP8L';
-const merchantKey = 'e77acd71-581a-4a4b-a19b-73599b654568';
-const salt = 1;
+let salt_key = 'e77acd71-581a-4a4b-a19b-73599b654568'
+let merchant_id = 'M1N7YIUDDP8L'
 
-app.post('/api/payment', async (req, res) => {
-    const { orderId, name, email, mobile, amount } = req.body;
-    const mertrid = `CMS${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-    const usrid = `CMS${Math.floor(100000 + Math.random() * 900000)}`;
-    const description = 'Payment for Product';
+app.get('/', (req, res) => {
+    res.send("Hello World!")
+})
 
-    const data = {
-        merchantId,
-        merchantTransactionId: mertrid,
-        merchantUserId: usrid,
-        amount: amount * 100,
-        redirectUrl: 'https://testing-w1tu.vercel.app/#/paymentstatus',
-        redirectMode: 'POST',
-        callbackUrl: 'https://testing-w1tu.vercel.app/#/paymentstatus', // Change to your domain
-        merchantOrderId: orderId,
-        mobileNumber: mobile,
-        message: description,
-        shortName: name,
-        email,
-        paymentInstrument: {
-            type: 'PAY_PAGE',
-        },
-    };
 
-    const payloadMain = Buffer.from(JSON.stringify(data)).toString('base64');
-    const payload = `${payloadMain}/pg/v1/pay${merchantKey}`;
-    const checksum = `${crypto.createHash('sha256').update(payload).digest('hex')}###${salt}`;
+app.post('/order', async (req, res) => {
 
     try {
-        const response = await axios.post('https://api.phonepe.com/apis/hermes/pg/v1/pay', {
-            request: payloadMain,
-        }, {
-            headers: {
-                'Content-Type': 'application/json',
-                'X-VERIFY': checksum,
-                accept: 'application/json',
-            },
-        });
 
-        const redirectUrl = response.data.data.instrumentResponse.redirectInfo.url;
-        res.json({ redirectUrl });
-    } catch (error) {
-        res.status(500).json({ error: 'Payment error' });
-    }
-});
+        let merchantTransactionId = uniqid();
 
-app.post('/api/payment/status', async (req, res) => {
-    const { code, merchantOrderId } = req.body;
-    const orderStatus = code || 'Awaiting Payment';
-
-    try {
-        const result = await pool.query('SELECT * FROM newsales WHERE orderid = $1', [merchantOrderId]);
-        if (result.rows.length === 0) {
-            return res.status(400).json({ status: 'Invalid Data', orderDetails: null });
+        const data = {
+            merchantId: merchant_id,
+            merchantTransactionId: merchantTransactionId,
+            merchantUserId: "MUI123",
+            name: req.body.name,
+            amount: req.body.amount * 100,
+            redirectUrl: `https://testing-rho-rose.vercel.app/status?id=${merchantTransactionId}`,
+            redirectMode: "POST",
+            mobileNumber: req.body.phone,
+            paymentInstrument: {
+                type: "PAY_PAGE"
+            }
         }
 
-        const order = result.rows[0];
-        const orderDetails = {
-            orderId: order.cartid,
-            customerName: order.custname,
-            itemCount: order.item_count,
-            totalAmount: order.totamt,
-            address: order.address,
-            district: order.ddistrict,
-            state: order.dstate,
-            country: order.dcountry,
-            mobile: order.dmobile,
-            email: order.custid,
-        };
 
-        await pool.query('UPDATE newsales SET orderstatus = $1 WHERE orderid = $2', [orderStatus, merchantOrderId]);
+        const payload = JSON.stringify(data)
+        const payloadMain = Buffer.from(payload).toString('base64')
+        const keyIndex = 1
+        const string = payloadMain + '/pg/v1/pay' + salt_key;
+        const sha256 = crypto.createHash('sha256').update(string).digest('hex');
+        const checksum = sha256 + '###' + keyIndex;
 
-        res.json({ status: orderStatus, orderDetails });
+
+        const prod_URL = "https://api.phonepe.com/apis/hermes/pg/v1/pay"
+        // const prod_URL = "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/pay"
+
+        const options = {
+            method: 'POST',
+            url: prod_URL,
+            headers: {
+                accept: 'application/json',
+                'Content-Type': 'application/json',
+                'X-VERIFY': checksum
+            },
+            data: {
+                request: payloadMain
+            }
+        }
+
+        await axios(options).then(function (response) {
+
+            console.log(response.data)
+            return res.json(response.data)
+
+        }).catch(function (error) {
+            console.log(error)
+        })
+
     } catch (error) {
-        res.status(500).json({ error: 'Error fetching payment status' });
+        console.log(error)
     }
-});
+})
 
-app.use(express.static(path.join(__dirname, '..', 'payment-project', 'dist')));
+app.post('/status', async (req, res) => {
 
-app.get('/api/test', (req, res) => {
-    res.send('Hello from the backend!');
-});
+    const merchantTransactionId = req.query.id
+    const merchantId = merchant_id
 
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'payment-project', 'dist', 'index.html'));
-});
 
-app.listen(5000, () => {
-    console.log('Server is running on port 5000');
-});
+    const keyIndex = 1
+    const string = `/pg/v1/status/${merchantId}/${merchantTransactionId}` + salt_key;
+    const sha256 = crypto.createHash('sha256').update(string).digest('hex');
+    const checksum = sha256 + '###' + keyIndex;
+
+
+    const options = {
+        method: 'GET',
+        url: `https://api.phonepe.com/apis/hermes/pg/v1/status/${merchantId}/${merchantTransactionId}`,
+        headers: {
+            accept: 'application/json',
+            'Content-Type': 'application/json',
+            'X-VERIFY': checksum,
+            'X-MERCHANT-ID': `${merchantId}`
+        }
+    }
+
+    axios.request(options).then(function (response) {
+        if (response.data.success === true) {
+            console.log("Payment Success")
+        } else {
+            console.log("Payment Failed")
+        }
+
+    }).catch(function (error) {
+        console.log(error)
+    })
+
+
+})
+
+
+app.listen(8000, () => {
+    console.log("Server is running on port 8000")
+})
