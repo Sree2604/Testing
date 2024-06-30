@@ -4,16 +4,20 @@
     {
       "src": "./server/index.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "./payment-project",
+      "use": "@vercel/static-build"
     }
   ],
   "routes": [
     {
-      "src": "./server/index.js",
-      "dest": "/server/"
+      "src": "/api/(.*)",
+      "dest": "./server/index.js"
     },
     {
-      "src": "./payment-project/(.*)",
-      "dest": "/client/$1"
+      "src": "/(.*)",
+      "dest": "./payment-project/$1"
     }
   ]
 }
