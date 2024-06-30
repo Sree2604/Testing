@@ -16,7 +16,7 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/payment-project/dist/$1"
+      "dest": "/payment-project/$1"
     },
     {
       "src": "/api/(.*)",
