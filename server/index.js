@@ -13,17 +13,13 @@ app.use(express.urlencoded({
     extended: true
 }));
 
-app.use(express.static(path.join(__dirname, '..', 'payment-project', 'dist')));
+// app.use(express.static(path.join(__dirname, '..', 'payment-project', 'dist')));
 
-// API routes
-app.get('/', (req, res) => {
-    res.send("hello world")
-});
 
-// All other routes should serve the React app
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'payment-project', 'dist', 'index.html'));
-});
+// // All other routes should serve the React app
+// app.get('*', (req, res) => {
+//     res.sendFile(path.join(__dirname, '..', 'payment-project', 'dist', 'index.html'));
+// });
 
 // const id = process.env.ID;
 const PHONE_PE_HOST_URL = "https://api.phonepe.com/apis/hermes";
