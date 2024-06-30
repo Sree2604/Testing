@@ -13,7 +13,7 @@ app.use(express.urlencoded({
     extended: true
 }));
 
-app.use(express.static(path.join(__dirname, '..', 'client', 'dist')));
+app.use(express.static(path.join(__dirname, '..', 'payment-project', 'dist')));
 
 // API routes
 app.get('/', (req, res) => {
@@ -22,7 +22,7 @@ app.get('/', (req, res) => {
 
 // All other routes should serve the React app
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'client', 'dist', 'index.html'));
+    res.sendFile(path.join(__dirname, '..', 'payment-project', 'dist', 'index.html'));
 });
 
 // const id = process.env.ID;
