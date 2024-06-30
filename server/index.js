@@ -75,8 +75,8 @@ app.get("/pay", async function (req, res, next) {
         )
         .then(function (response) {
             console.log("response->", JSON.stringify(response.data));
-            // return res.json(response.data)
-            res.redirect(response.data.data.instrumentResponse.redirectInfo.url);
+            return res.json(response.data)
+            // res.redirect(response.data.data.instrumentResponse.redirectInfo.url);
         })
         .catch(function (error) {
             res.send(error);
