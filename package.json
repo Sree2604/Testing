@@ -1,0 +1,11 @@
+{
+  "name": "project-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "npm run start --prefix server",
+    "start:client": "npm run dev --prefix payment-project",
+    "build": "npm run build --prefix payment-project",
+    "serve": "npm run serve --prefix payment-project"
+  }
+}
