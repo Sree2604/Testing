@@ -1,15 +1,19 @@
 {
   "version": 2,
+  "builds": [
+    {
+      "src": "./server/index.js",
+      "use": "@vercel/node"
+    }
+  ],
   "routes": [
     {
-      "src": "/(.*)\\.js",
-      "headers": { "Content-Type": "application/javascript" },
-      "dest": "/$1.js"
+      "src": "./server/index.js",
+      "dest": "/server/"
     },
     {
-      "src": "/(.*)\\.jsx",
-      "headers": { "Content-Type": "text/jsx" },
-      "dest": "/$1.jsx"
+      "src": "./payment-project/(.*)",
+      "dest": "/client/$1"
     }
   ]
 }
