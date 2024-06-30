@@ -16,8 +16,12 @@
       "dest": "./server/index.js"
     },
     {
+      "src": "/payment-project/(.*)",
+      "dest": "/payment-project/$1"
+    },
+    {
       "src": "/(.*)",
-      "dest": "./payment-project/$1"
+      "dest": "/payment-project/index.html"
     }
   ]
 }
