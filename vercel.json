@@ -12,16 +12,12 @@
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "./server/index.js"
+      "src": "./server/index.js",
+      "dest": "/api/(.*)"
     },
     {
       "src": "/payment-project/(.*)",
-      "dest": "/payment-project/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/payment-project/index.html"
+      "dest": "/"
     }
   ]
 }
