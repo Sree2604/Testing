@@ -16,8 +16,8 @@ app.use(express.urlencoded({
 app.use(express.static(path.join(__dirname, '..', 'client', 'dist')));
 
 // API routes
-app.get('/api/some-endpoint', (req, res) => {
-    // Your API logic here
+app.get('/', (req, res) => {
+    res.send("hello world")
 });
 
 // All other routes should serve the React app
