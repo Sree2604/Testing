@@ -1,20 +1,14 @@
-import React, { useEffect, useState } from "react";
-
-function App() {
-  const [message, setMessage] = useState("");
-
-  useEffect(() => {
-    fetch("/api/test")
-      .then((response) => response.text())
-      .then((data) => setMessage(data));
-  }, []);
-
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import PaymentForm from "./components/PaymentForm";
+import PaymentStatus from "./components/PaymentStatus";
+export default function App() {
   return (
-    <div className="App">
-      <h1>{message}</h1>
-      <h2>Hii</h2>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<PaymentForm />} />
+        <Route path="/paymentstatus" element={<PaymentStatus />} />
+      </Routes>
+    </Router>
   );
 }
-
-export default App;

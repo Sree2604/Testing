@@ -19,19 +19,22 @@ function PaymentForm() {
     e.preventDefault();
 
     try {
-      const response = await fetch("http://localhost:3000/api/payment", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          orderId,
-          name,
-          email,
-          mobile,
-          amount,
-        }),
-      });
+      const response = await fetch(
+        "https://testing-rho-rose.vercel.app/api/payment",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            orderId,
+            name,
+            email,
+            mobile,
+            amount,
+          }),
+        }
+      );
       const data = await response.json();
       window.location.href = data.redirectUrl;
       console.log(data.redirectUrl);

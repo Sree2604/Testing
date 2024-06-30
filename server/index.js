@@ -35,9 +35,9 @@ app.post('/api/payment', async (req, res) => {
         merchantTransactionId: mertrid,
         merchantUserId: usrid,
         amount: amount * 100,
-        redirectUrl: 'http://localhost:5173/paymentstatus',
+        redirectUrl: 'https://testing-w1tu.vercel.app/paymentstatus',
         redirectMode: 'POST',
-        callbackUrl: 'http://localhost:5173/paymentstatus', // Change to your domain
+        callbackUrl: 'https://testing-w1tu.vercel.app/paymentstatus', // Change to your domain
         merchantOrderId: orderId,
         mobileNumber: mobile,
         message: description,

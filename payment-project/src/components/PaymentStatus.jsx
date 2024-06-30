@@ -8,7 +8,7 @@ function PaymentStatus() {
     const fetchPaymentStatus = async () => {
       try {
         const response = await fetch(
-          "http://localhost:3000/api/payment/status",
+          "https://testing-rho-rose.vercel.app/api/payment/status",
           {
             method: "POST",
             headers: {
