@@ -13,8 +13,7 @@ app.use(express.urlencoded({
     extended: true
 }));
 
-// app.use(express.static(path.join(__dirname, '..', 'payment-project', 'dist')));
-
+app.use(express.static(path.join(__dirname, '..', 'payment-project', 'dist')));
 
 // // All other routes should serve the React app
 app.get('/client', (req, res) => {
