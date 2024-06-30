@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const axios = require('axios');
 const uniqid = require('uniqid');
 const sha256 = require('sha256')
+const path = require('path')
 const app = express();
 
 app.use(cors());
@@ -11,6 +12,18 @@ app.use(express.json());
 app.use(express.urlencoded({
     extended: true
 }));
+
+app.use(express.static(path.join(__dirname, '..', 'client', 'dist')));
+
+// API routes
+app.get('/api/some-endpoint', (req, res) => {
+    // Your API logic here
+});
+
+// All other routes should serve the React app
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'client', 'dist', 'index.html'));
+});
 
 // const id = process.env.ID;
 const PHONE_PE_HOST_URL = "https://api.phonepe.com/apis/hermes";
