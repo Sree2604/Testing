@@ -13,11 +13,14 @@
       "use": "@vercel/node"
     }
   ],
-
   "routes": [
     {
       "src": "/(.*)",
       "dest": "/server/index.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/payment-project/dist/$1"
     }
   ]
 }
