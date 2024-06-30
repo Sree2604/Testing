@@ -1,8 +1,15 @@
 {
   "version": 2,
   "routes": [
-    { "src": "^/server/(.*)", "dest": "/server/index.js" },
-    { "src": "^/payment-project/(.*)", "dest": "/payment-project/$1" },
-    { "src": "/(.*)", "dest": "/payment-project/$1" }
+    {
+      "src": "/(.*)\\.js",
+      "headers": { "Content-Type": "application/javascript" },
+      "dest": "/$1.js"
+    },
+    {
+      "src": "/(.*)\\.jsx",
+      "headers": { "Content-Type": "text/jsx" },
+      "dest": "/$1.jsx"
+    }
   ]
 }
