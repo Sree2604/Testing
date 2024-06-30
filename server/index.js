@@ -12,110 +12,119 @@ app.use(express.urlencoded({
     extended: true
 }));
 
-
-let salt_key = 'e77acd71-581a-4a4b-a19b-73599b654568'
-let merchant_id = 'M1N7YIUDDP8L'
+// const id = process.env.ID;
+const PHONE_PE_HOST_URL = "https://api.phonepe.com/apis/hermes";
+const SALT_INDEX = 1;
+const SALT_KEY = "e77acd71-581a-4a4b-a19b-73599b654568";
+const MERCHANT_ID = "M1N7YIUDDP8L";
+const APP_BE_URL = "https://testing-rho-rose.vercel.app/";
 
 app.get('/', (req, res) => {
     res.send("Hello World!")
 })
 
 
-app.post('/order', async (req, res) => {
+app.get("/pay", async function (req, res, next) {
+    // Initiate a payment
 
-    try {
+    // Transaction amount
+    const amount = +req.query.amount;
 
-        let merchantTransactionId = uniqid();
+    // User ID is the ID of the user present in our application DB
+    let userId = "MUID123";
 
-        const data = {
-            merchantId: merchant_id,
-            merchantTransactionId: merchantTransactionId,
-            merchantUserId: "MUI123",
-            name: req.body.name,
-            amount: req.body.amount * 100,
-            redirectUrl: `https://testing-rho-rose.vercel.app/status?id=${merchantTransactionId}`,
-            redirectMode: "POST",
-            mobileNumber: req.body.phone,
-            paymentInstrument: {
-                type: "PAY_PAGE"
-            }
-        }
+    // Generate a unique merchant transaction ID for each transaction
+    let merchantTransactionId = uniqid();
 
+    // redirect url => phonePe will redirect the user to this url once payment is completed. It will be a GET request, since redirectMode is "REDIRECT"
+    let normalPayLoad = {
+        merchantId: MERCHANT_ID, //* PHONEPE_MERCHANT_ID . Unique for each account (private)
+        merchantTransactionId: merchantTransactionId,
+        merchantUserId: userId,
+        amount: amount * 100, // converting to paise
+        redirectUrl: `${APP_BE_URL}/payment/validate/${merchantTransactionId}`,
+        redirectMode: "REDIRECT",
+        mobileNumber: "9999999999",
+        paymentInstrument: {
+            type: "PAY_PAGE",
+        },
+    };
 
-        const payload = JSON.stringify(data)
-        const payloadMain = Buffer.from(payload).toString('base64')
-        const keyIndex = 1
-        const string = payloadMain + '/pg/v1/pay' + salt_key;
-        const sha256 = crypto.createHash('sha256').update(string).digest('hex');
-        const checksum = sha256 + '###' + keyIndex;
+    // make base64 encoded payload
+    let bufferObj = Buffer.from(JSON.stringify(normalPayLoad), "utf8");
+    let base64EncodedPayload = bufferObj.toString("base64");
 
+    // X-VERIFY => SHA256(base64EncodedPayload + "/pg/v1/pay" + SALT_KEY) + ### + SALT_INDEX
+    let string = base64EncodedPayload + "/pg/v1/pay" + SALT_KEY;
+    let sha256_val = sha256(string);
+    let xVerifyChecksum = sha256_val + "###" + SALT_INDEX;
 
-        const prod_URL = "https://api.phonepe.com/apis/hermes/pg/v1/pay"
-        // const prod_URL = "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/pay"
-
-        const options = {
-            method: 'POST',
-            url: prod_URL,
-            headers: {
-                accept: 'application/json',
-                'Content-Type': 'application/json',
-                'X-VERIFY': checksum
+    axios
+        .post(
+            `${PHONE_PE_HOST_URL}/pg/v1/pay`,
+            {
+                request: base64EncodedPayload,
             },
-            data: {
-                request: payloadMain
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-VERIFY": xVerifyChecksum,
+                    accept: "application/json",
+                },
             }
-        }
-
-        await axios(options).then(function (response) {
-
-            console.log(response.data)
-            return res.json(response.data)
-
-        }).catch(function (error) {
-            console.log(error)
+        )
+        .then(function (response) {
+            console.log("response->", JSON.stringify(response.data));
+            // return res.json(response.data)
+            res.redirect(response.data.data.instrumentResponse.redirectInfo.url);
         })
+        .catch(function (error) {
+            res.send(error);
+        });
+});
 
-    } catch (error) {
-        console.log(error)
+// endpoint to check the status of payment
+app.get("/payment/validate/:merchantTransactionId", async function (req, res) {
+    const { merchantTransactionId } = req.params;
+    // check the status of the payment using merchantTransactionId
+    if (merchantTransactionId) {
+        let statusUrl =
+            `${PHONE_PE_HOST_URL}/pg/v1/status/${MERCHANT_ID}/` +
+            merchantTransactionId;
+
+        // generate X-VERIFY
+        let string =
+            `/pg/v1/status/${MERCHANT_ID}/` + merchantTransactionId + SALT_KEY;
+        let sha256_val = sha256(string);
+        let xVerifyChecksum = sha256_val + "###" + SALT_INDEX;
+
+        axios
+            .get(statusUrl, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-VERIFY": xVerifyChecksum,
+                    "X-MERCHANT-ID": merchantTransactionId,
+                    accept: "application/json",
+                },
+            })
+            .then(function (response) {
+                console.log("response->", response.data);
+                if (response.data && response.data.code === "PAYMENT_SUCCESS") {
+                    // redirect to FE payment success status page
+                    res.send(response.data);
+                } else {
+                    // redirect to FE payment failure / pending status page
+                }
+            })
+            .catch(function (error) {
+                // redirect to FE payment failure / pending status page
+                res.send(error);
+            });
+    } else {
+        res.send("Sorry!! Error");
     }
-})
+});
 
-app.post('/status', async (req, res) => {
-
-    const merchantTransactionId = req.query.id
-    const merchantId = merchant_id
-
-
-    const keyIndex = 1
-    const string = `/pg/v1/status/${merchantId}/${merchantTransactionId}` + salt_key;
-    const sha256 = crypto.createHash('sha256').update(string).digest('hex');
-    const checksum = sha256 + '###' + keyIndex;
-
-
-    const options = {
-        method: 'GET',
-        url: `https://api.phonepe.com/apis/hermes/pg/v1/status/${merchantId}/${merchantTransactionId}`,
-        headers: {
-            accept: 'application/json',
-            'Content-Type': 'application/json',
-            'X-VERIFY': checksum,
-            'X-MERCHANT-ID': `${merchantId}`
-        }
-    }
-
-    axios.request(options).then(function (response) {
-        if (response.data.success === true) {
-            console.log("Payment Success")
-        } else {
-            console.log("Payment Failed")
-        }
-
-    }).catch(function (error) {
-        console.log(error)
-    })
-
-
-})
 
 
 app.listen(8000, () => {
