@@ -7,14 +7,6 @@ function PaymentForm() {
   const [mobile, setMobile] = useState("");
   const [amount, setAmount] = useState("");
 
-  const [message, setMessage] = useState("");
-  useEffect(() => {
-    fetch("/api/test")
-      .then((response) => response.text())
-      .then((data) => setMessage(data));
-  }, []);
-
-  console.log(message);
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -43,7 +35,48 @@ function PaymentForm() {
     }
   };
 
-  return <>{message}</>;
+  return (
+    <>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          placeholder="Order ID"
+          value={orderId}
+          onChange={(e) => setOrderId(e.target.value)}
+          required
+        />
+        <input
+          type="text"
+          placeholder="Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <input
+          type="text"
+          placeholder="Mobile"
+          value={mobile}
+          onChange={(e) => setMobile(e.target.value)}
+          required
+        />
+        <input
+          type="number"
+          placeholder="Amount"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          required
+        />
+        <button type="submit">Pay</button>
+      </form>
+    </>
+  );
 }
 
 export default PaymentForm;
