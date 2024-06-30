@@ -17,9 +17,9 @@ app.use(express.urlencoded({
 
 
 // // All other routes should serve the React app
-// app.get('*', (req, res) => {
-//     res.sendFile(path.join(__dirname, '..', 'payment-project', 'dist', 'index.html'));
-// });
+app.get('/client', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'payment-project', 'dist', 'index.html'));
+});
 app.get('/api/hello', (req, res) => {
     res.json({ message: 'Hello from server!' });
 });
