@@ -7,12 +7,20 @@
       "config": {
         "distDir": "dist"
       }
+    },
+    {
+      "src": "/server/index.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
       "dest": "/payment-project/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/server/index.js"
     }
   ]
 }
